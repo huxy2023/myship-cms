@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.29.2",
   "description": "MyShip Full-Stack Astro CMS — Powered by Astro 5 + Tencent Cloud SCF + Turso (context.db) + COS Media Library (context.files) + KV Settings (context.storage)",
   "scripts": {
     "dev:astro": "astro dev",

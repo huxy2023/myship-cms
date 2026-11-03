@@ -1,0 +1,113 @@
+name: MyShip Deploy & PR Preview
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install & Build (if package.json has build script)
+        run: |
+          if [ -f package.json ] && node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts.build ? 0 : 1)"; then
+            if [ -f pnpm-lock.yaml ]; then
+              corepack enable && pnpm install --frozen-lockfile && pnpm run build
+            elif [ -f package-lock.json ]; then
+              npm ci && npm run build
+            else
+              npm install && npm run build
+            fi
+          else
+            echo "No build script detected in package.json, skipping build step."
+          fi
+
+      - name: Deploy to MyShip EdgeOne & COS
+        id: deploy
+        env:
+          MYSHIP_SECRET_ID: ${{ secrets.MYSHIP_SECRET_ID }}
+          MYSHIP_SECRET_KEY: ${{ secrets.MYSHIP_SECRET_KEY }}
+          MYSHIP_TOKEN: ${{ secrets.MYSHIP_TOKEN }}
+          COS_ORIGIN: ${{ secrets.COS_ORIGIN }}
+          SHIP_REMOTE_DOMAIN: ${{ secrets.SHIP_REMOTE_DOMAIN }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.number }}
+          MYSHIP_PROJECT: "myship-cms"
+          MYSHIP_DIR: "./dist"
+        run: |
+          if [ -z "$MYSHIP_SECRET_ID" ] || [ -z "$COS_ORIGIN" ]; then
+            echo "⚠️ MyShip secrets (MYSHIP_SECRET_ID / COS_ORIGIN) not available in this context. Skipping deployment."
+            exit 0
+          fi
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            npx --yes github:huxy2023/myship "$MYSHIP_DIR" -d "pr-${PR_NUMBER}" -p "$MYSHIP_PROJECT"
+          else
+            npx --yes github:huxy2023/myship "$MYSHIP_DIR" -p "$MYSHIP_PROJECT"
+          fi
+
+      - name: Post PR Preview Comment
+        if: github.event_name == 'pull_request' && steps.deploy.outputs.primary_url != ''
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.primary_url }}
+          IMMUTABLE_URL: ${{ steps.deploy.outputs.immutable_url }}
+          DEPLOYMENT_ID: ${{ steps.deploy.outputs.deployment_id }}
+          FUNCTIONS_LIST: ${{ steps.deploy.outputs.functions }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+        with:
+          script: |
+            const marker = '<!-- myship-pr-preview -->';
+            const previewUrl = process.env.PREVIEW_URL;
+            const immutableUrl = process.env.IMMUTABLE_URL;
+            const deploymentId = process.env.DEPLOYMENT_ID;
+            const fnList = process.env.FUNCTIONS_LIST || '无 (纯静态)';
+            const shortSha = (process.env.COMMIT_SHA || '').slice(0, 7);
+            const body = [
+              marker,
+              '### 🚀 MyShip PR Preview Deployed!',
+              '',
+              '| 维度 | 访问链接 / 详情 |',
+              '| :--- | :--- |',
+              `| 🌐 **PR 预览域名 (随最新提交自动更新)** | [${previewUrl}](${previewUrl}) |`,
+              `| 🔒 **本次构建永久不可变快照** | [${immutableUrl}](${immutableUrl}) (\`${deploymentId}\`) |`,
+              `| ⚡ **边缘 Serverless 云函数** | \`${fnList}\` |`,
+              `| 📌 **触发提交 (Commit)** | \`${shortSha}\` |`,
+            ].join('\n');
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
