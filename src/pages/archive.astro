@@ -1,0 +1,292 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="文章归档与索引 · 栖迟手札" activeNav="archive">
+  <style is:global>
+    .archive-header {
+      padding: 48px 0 32px;
+      border-bottom: var(--header-border);
+    }
+
+    .archive-title {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 3.6vw, 38px);
+      margin: 0 0 10px;
+    }
+
+    .archive-stats {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .tag-cloud-section {
+      margin: 28px 0 36px;
+      padding: 22px 24px;
+      background: var(--bg-card);
+      border: var(--card-border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card);
+    }
+
+    .tag-cloud-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 0 0 12px;
+    }
+
+    .tag-cloud-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .archive-tag-btn {
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .archive-tag-btn:hover,
+    .archive-tag-btn.active {
+      background: var(--accent);
+      color: #fffdf9;
+      border-color: var(--accent);
+    }
+
+    .year-block {
+      margin-bottom: 40px;
+    }
+
+    .year-heading {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      margin: 0 0 16px;
+      color: var(--text);
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .year-count {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .timeline-list {
+      background: var(--bg-card);
+      border: var(--card-border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .timeline-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      transition: background-color 0.15s ease;
+    }
+
+    .timeline-row:last-child {
+      border-bottom: none;
+    }
+
+    .timeline-row:hover {
+      background: var(--bg-elevated);
+    }
+
+    .timeline-left {
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .timeline-date {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .timeline-post-title {
+      font-family: var(--font-display);
+      font-size: 16.5px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .timeline-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 680px) {
+      .timeline-row {
+        flex-direction: column;
+        gap: 6px;
+      }
+    }
+  </style>
+
+  <div class="container">
+    <section class="archive-header">
+      <h1 class="archive-title">文章归档 · Archive</h1>
+      <p class="archive-stats" id="archive-summary">正在统计历史文章与字数...</p>
+    </section>
+
+    <section class="tag-cloud-section">
+      <div class="tag-cloud-title">按主题标签检索 · TOPICS</div>
+      <div class="tag-cloud-list" id="tag-cloud-box"></div>
+    </section>
+
+    <section id="archive-years-box"></section>
+  </div>
+
+  <script is:inline>
+    const CATEGORY_LABELS = {
+      essay: '随笔思考',
+      design: '器物与排版',
+      craft: '构建手记',
+      notes: '日常札记',
+      architecture: '构建手记',
+      engineering: '工程实践',
+      release: '版本手记',
+    };
+
+    let allPublishedPosts = [];
+    let selectedTag = new URLSearchParams(window.location.search).get('tag') || '';
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderTagCloud() {
+      const counts = new Map();
+      for (const p of allPublishedPosts) {
+        for (const t of p.tags || []) {
+          counts.set(t, (counts.get(t) || 0) + 1);
+        }
+      }
+      const box = document.getElementById('tag-cloud-box');
+      const allBtn = `<button class="archive-tag-btn ${!selectedTag ? 'active' : ''}" data-tag="">全部文章 (${allPublishedPosts.length})</button>`;
+      const tagBtns = Array.from(counts.entries())
+        .map(
+          ([t, c]) =>
+            `<button class="archive-tag-btn ${selectedTag === t ? 'active' : ''}" data-tag="${escapeHtml(t)}">#${escapeHtml(t)} (${c})</button>`
+        )
+        .join('');
+      box.innerHTML = allBtn + tagBtns;
+
+      box.querySelectorAll('.archive-tag-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          selectedTag = btn.getAttribute('data-tag') || '';
+          renderTagCloud();
+          renderYearTimeline();
+        });
+      });
+    }
+
+    function renderYearTimeline() {
+      const filtered = selectedTag
+        ? allPublishedPosts.filter((p) => (p.tags || []).includes(selectedTag))
+        : allPublishedPosts;
+
+      const byYear = new Map();
+      for (const p of filtered) {
+        const dt = new Date(p.published_at || p.created_at);
+        const year = Number.isNaN(dt.getTime()) ? '2026' : String(dt.getFullYear());
+        if (!byYear.has(year)) byYear.set(year, []);
+        byYear.get(year).push(p);
+      }
+
+      const yearsBox = document.getElementById('archive-years-box');
+      if (filtered.length === 0) {
+        yearsBox.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted);">未找到包含该标签的文章</div>`;
+        return;
+      }
+
+      yearsBox.innerHTML = Array.from(byYear.entries())
+        .sort((a, b) => Number(b[0]) - Number(a[0]))
+        .map(([year, items]) => {
+          const rowsHtml = items
+            .map((p) => {
+              const d = new Date(p.published_at || p.created_at);
+              const mmdd = Number.isNaN(d.getTime())
+                ? '01-01'
+                : `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              const cat = CATEGORY_LABELS[p.category] || p.category;
+              const pinBadge = p.featured
+                ? `<span style="color:var(--accent);font-size:12px;font-weight:700;">[置顶]</span>`
+                : '';
+              return `
+                <a href="/post/?slug=${encodeURIComponent(p.slug)}" class="timeline-row">
+                  <div class="timeline-left">
+                    <span class="timeline-date">${mmdd}</span>
+                    <span class="timeline-post-title">${pinBadge} ${escapeHtml(p.title)}</span>
+                  </div>
+                  <div class="timeline-right">
+                    <span>${escapeHtml(cat)}</span>
+                    <span>·</span>
+                    <span>${p.readingMinutes || 1} 分钟阅读</span>
+                  </div>
+                </a>
+              `;
+            })
+            .join('');
+          return `
+            <div class="year-block">
+              <h2 class="year-heading">${year} <span class="year-count">共 ${items.length} 篇</span></h2>
+              <div class="timeline-list">${rowsHtml}</div>
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    async function initArchivePage() {
+      fetch('/api/cms/overview')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.ok) window.syncGlobalSiteBranding(d.settings);
+        })
+        .catch(() => {});
+
+      const res = await fetch('/api/cms/posts?status=published');
+      const data = await res.json();
+      if (!data.ok) return;
+      allPublishedPosts = data.posts || [];
+      const totalWords = allPublishedPosts.reduce((acc, p) => acc + (p.wordCount || 0), 0);
+      document.getElementById('archive-summary').textContent =
+        `至今共刊发 ${allPublishedPosts.length} 篇文章，累计书写约 ${totalWords.toLocaleString()} 字。`;
+
+      renderTagCloud();
+      renderYearTimeline();
+    }
+
+    initArchivePage();
+  </script>
+</BaseLayout>

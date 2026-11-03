@@ -1,0 +1,777 @@
+---
+const {
+  title = '栖迟手札 · 个人写作专栏',
+  description = '关于产品构建、器物审美与漫长时光的个人写作专栏',
+  activeNav = 'home',
+} = Astro.props;
+---
+<!doctype html>
+<html lang="zh-CN" data-theme="paper">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script is:inline>
+      (function () {
+        const valid = ['paper', 'craft', 'magazine', 'night'];
+        const urlTheme = new URLSearchParams(window.location.search).get('theme');
+        if (urlTheme && valid.includes(urlTheme)) {
+          document.documentElement.setAttribute('data-theme', urlTheme);
+          localStorage.setItem('cms-visual-theme', urlTheme);
+          return;
+        }
+        const saved = localStorage.getItem('cms-visual-theme');
+        if (saved && valid.includes(saved)) {
+          document.documentElement.setAttribute('data-theme', saved);
+        }
+      })();
+    </script>
+    <style is:global>
+      /* ==========================================================================
+         1. 「纸墨人文 · Editorial Paper」 (默认：Kinfolk / Substack 暖白宣纸社论风)
+         ========================================================================== */
+      :root,
+      html[data-theme='paper'] {
+        --bg: #faf6ee;
+        --bg-card: #fffdf9;
+        --bg-elevated: #f2ece1;
+        --bg-subtle: #ebe3d5;
+        --text: #1c1917;
+        --text-secondary: #44403c;
+        --text-muted: #78716c;
+        --border: #e2d9c8;
+        --border-strong: #c7bba6;
+        --accent: #b45309;
+        --accent-hover: #92400e;
+        --accent-soft: rgba(180, 83, 9, 0.1);
+        --emerald: #15803d;
+        --amber: #b45309;
+        --rose: #be123c;
+        --radius-card: 8px;
+        --radius-btn: 6px;
+        --shadow-card: 0 2px 14px rgba(28, 25, 23, 0.04);
+        --font-display: 'Songti SC', 'Noto Serif SC', 'Source Han Serif SC', 'STSong', Georgia,
+          serif;
+        --font-body: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+          'Noto Sans SC', sans-serif;
+        --font-reading: 'Songti SC', 'Noto Serif SC', 'PingFang SC', Georgia, serif;
+        --font-mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
+        --header-border: 3px double #d5cbb8;
+        --card-border: 1px solid var(--border);
+      }
+
+      /* ==========================================================================
+         2. 「极简笔记 · Nordic Craft」 (Bear / Craft / Linear 纯净浅灰白现代几何风)
+         ========================================================================== */
+      html[data-theme='craft'] {
+        --bg: #f3f6f9;
+        --bg-card: #ffffff;
+        --bg-elevated: #e8eef5;
+        --bg-subtle: #dde5ef;
+        --text: #0f172a;
+        --text-secondary: #334155;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+        --border-strong: #cbd5e1;
+        --accent: #0f766e;
+        --accent-hover: #115e59;
+        --accent-soft: rgba(15, 118, 110, 0.1);
+        --emerald: #059669;
+        --amber: #d97706;
+        --rose: #e11d48;
+        --radius-card: 16px;
+        --radius-btn: 10px;
+        --shadow-card: 0 10px 28px -6px rgba(15, 23, 42, 0.065);
+        --font-display: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC',
+          'Hiragino Sans GB', sans-serif;
+        --font-body: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', sans-serif;
+        --font-reading: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC',
+          sans-serif;
+        --font-mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+        --header-border: 1px solid var(--border);
+        --card-border: 1px solid var(--border);
+      }
+
+      /* ==========================================================================
+         3. 「日系杂志 · Magazine Air」 (POPEYE / BRUTUS 暖米杏画报分栏与朱砂印章风)
+         ========================================================================== */
+      html[data-theme='magazine'] {
+        --bg: #efeae0;
+        --bg-card: #faf7f0;
+        --bg-elevated: #e4dccb;
+        --bg-subtle: #d8ceba;
+        --text: #161412;
+        --text-secondary: #332e2a;
+        --text-muted: #635b52;
+        --border: #1c1917;
+        --border-strong: #1c1917;
+        --accent: #c83e2b;
+        --accent-hover: #a32e1e;
+        --accent-soft: rgba(200, 62, 43, 0.12);
+        --emerald: #1f6f50;
+        --amber: #b85d19;
+        --rose: #c83e2b;
+        --radius-card: 0px;
+        --radius-btn: 2px;
+        --shadow-card: 4px 4px 0px #1c1917;
+        --font-display: 'PingFang SC', 'Hiragino Sans GB', 'Noto Serif SC', Georgia, serif;
+        --font-body: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        --font-reading: -apple-system, BlinkMacSystemFont, 'PingFang SC', Georgia, serif;
+        --font-mono: 'SFMono-Regular', Menlo, monospace;
+        --header-border: 2px solid #1c1917;
+        --card-border: 1.5px solid #1c1917;
+      }
+
+      /* ==========================================================================
+         4. 「护眼夜读 · Warm Night」 (Kindle 暖墨暗色，非霓虹科技风，专为夜间护眼阅读设计)
+         ========================================================================== */
+      html[data-theme='night'] {
+        --bg: #181715;
+        --bg-card: #211f1c;
+        --bg-elevated: #2a2723;
+        --bg-subtle: #33302b;
+        --text: #e7e2d8;
+        --text-secondary: #c7bfb3;
+        --text-muted: #8f877b;
+        --border: #332f2a;
+        --border-strong: #4a443d;
+        --accent: #d97706;
+        --accent-hover: #f59e0b;
+        --accent-soft: rgba(217, 119, 6, 0.14);
+        --emerald: #34d399;
+        --amber: #fbbf24;
+        --rose: #fb7185;
+        --radius-card: 10px;
+        --radius-btn: 6px;
+        --shadow-card: 0 6px 24px rgba(0, 0, 0, 0.25);
+        --font-display: 'Songti SC', 'Noto Serif SC', Georgia, serif;
+        --font-body: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
+        --font-reading: 'Songti SC', 'Noto Serif SC', 'PingFang SC', serif;
+        --font-mono: 'JetBrains Mono', monospace;
+        --header-border: 1px solid var(--border);
+        --card-border: 1px solid var(--border);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font-body);
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+        transition: background-color 0.25s ease, color 0.2s ease;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .container {
+        max-width: 1060px;
+        margin: 0 auto;
+        padding: 0 28px;
+      }
+
+      /* 顶部杂志社论感导航栏 */
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: color-mix(in srgb, var(--bg) 90%, transparent);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: var(--header-border);
+      }
+
+      .header-inner {
+        height: 68px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+
+      .brand-mark {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent);
+        display: inline-block;
+        flex-shrink: 0;
+        transform: translateY(-1px);
+      }
+
+      .brand-title {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 20px;
+        letter-spacing: 0.01em;
+        color: var(--text);
+      }
+
+      .brand-sub {
+        font-size: 12.5px;
+        color: var(--text-muted);
+        border-left: 1px solid var(--border-strong);
+        padding-left: 12px;
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .nav-link {
+        padding: 6px 12px;
+        border-radius: var(--radius-btn);
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        transition: all 0.15s ease;
+      }
+
+      .nav-link:hover {
+        color: var(--text);
+        background: var(--bg-elevated);
+      }
+
+      .nav-link.active {
+        color: var(--accent);
+        font-weight: 600;
+        background: var(--accent-soft);
+      }
+
+      .nav-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: var(--radius-btn);
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text);
+        cursor: pointer;
+        transition: all 0.16s ease;
+      }
+
+      .nav-btn:hover {
+        border-color: var(--border-strong);
+        background: var(--bg-elevated);
+      }
+
+      .nav-btn.primary {
+        background: var(--accent);
+        color: #fffdf9;
+        border-color: var(--accent);
+      }
+
+      .nav-btn.primary:hover {
+        background: var(--accent-hover);
+        border-color: var(--accent-hover);
+      }
+
+      /* 主题选择器胶囊 */
+      .theme-switcher {
+        display: inline-flex;
+        align-items: center;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 2px;
+        margin-left: 4px;
+      }
+
+      .theme-opt {
+        border: none;
+        background: transparent;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .theme-opt:hover {
+        color: var(--text);
+      }
+
+      .theme-opt.active {
+        background: var(--bg-card);
+        color: var(--accent);
+        font-weight: 600;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+
+      /* 徽章与分类标签 */
+      .badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-size: 11.5px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .status-published {
+        background: rgba(21, 128, 61, 0.1);
+        color: var(--emerald);
+      }
+
+      .status-draft {
+        background: rgba(180, 83, 9, 0.12);
+        color: var(--amber);
+      }
+
+      .status-archived {
+        background: var(--bg-elevated);
+        color: var(--text-muted);
+      }
+
+      /* 精选长文排版 (Prose) */
+      .prose {
+        font-family: var(--font-reading);
+        font-size: 17px;
+        line-height: 1.9;
+        color: var(--text);
+        word-break: break-word;
+      }
+
+      .prose h2 {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 700;
+        margin: 2.2em 0 0.75em;
+        padding-bottom: 0.35em;
+        border-bottom: 1px solid var(--border);
+        letter-spacing: -0.01em;
+        scroll-margin-top: 90px;
+      }
+
+      .prose h3 {
+        font-family: var(--font-display);
+        font-size: 19px;
+        font-weight: 700;
+        margin: 1.8em 0 0.6em;
+        scroll-margin-top: 90px;
+      }
+
+      .prose p {
+        margin: 1.15em 0;
+      }
+
+      .prose blockquote {
+        margin: 1.6em 0;
+        padding: 14px 22px;
+        border-left: 3px solid var(--accent);
+        background: var(--bg-elevated);
+        border-radius: 0 var(--radius-card) var(--radius-card) 0;
+        color: var(--text-secondary);
+        font-style: normal;
+      }
+
+      .prose blockquote p {
+        margin: 0.4em 0;
+      }
+
+      .prose code {
+        font-family: var(--font-mono);
+        font-size: 0.86em;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: var(--bg-elevated);
+        color: var(--accent);
+      }
+
+      .prose .code-block-wrap {
+        margin: 1.6em 0;
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border);
+        background: var(--bg-elevated);
+        overflow: hidden;
+      }
+
+      .prose .code-block-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-subtle);
+      }
+
+      .prose .code-lang-label {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+      }
+
+      .prose .code-copy-btn {
+        padding: 3px 9px;
+        font-size: 11.5px;
+        font-family: var(--font-body);
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+
+      .prose .code-copy-btn:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+
+      .prose pre {
+        margin: 0;
+        padding: 16px 20px;
+        background: transparent;
+        border: none;
+        overflow-x: auto;
+        line-height: 1.65;
+      }
+
+      .prose pre code {
+        padding: 0;
+        background: transparent;
+        color: var(--text);
+        font-size: 13.5px;
+      }
+
+      /* Highlight.js 人文配色语法高亮 (自适应浅色与暖夜读模式) */
+      .hljs-comment,
+      .hljs-quote {
+        color: var(--text-muted);
+        font-style: italic;
+      }
+      .hljs-keyword,
+      .hljs-selector-tag,
+      .hljs-Raw {
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .hljs-string,
+      .hljs-doctag,
+      .hljs-regexp {
+        color: var(--emerald);
+      }
+      .hljs-title,
+      .hljs-section,
+      .hljs-built_in,
+      .hljs-name {
+        color: #1d4ed8;
+      }
+      html[data-theme='night'] .hljs-title,
+      html[data-theme='night'] .hljs-section,
+      html[data-theme='night'] .hljs-built_in {
+        color: #60a5fa;
+      }
+      .hljs-number,
+      .hljs-literal,
+      .hljs-variable,
+      .hljs-template-variable,
+      .hljs-attr {
+        color: var(--amber);
+      }
+
+      /* GFM 表格与图片图注 */
+      .prose table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.6em 0;
+        font-size: 15px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        overflow: hidden;
+      }
+
+      .prose th,
+      .prose td {
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        text-align: left;
+      }
+
+      .prose th {
+        background: var(--bg-elevated);
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .prose-figure {
+        margin: 1.8em 0;
+        text-align: center;
+      }
+
+      .prose-figure figcaption {
+        margin-top: 8px;
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      .prose img {
+        max-width: 100%;
+        border-radius: var(--radius-card);
+        border: 1px solid var(--border);
+        margin: 1.5em auto;
+        display: block;
+        cursor: zoom-in;
+      }
+
+      .prose ul,
+      .prose ol {
+        padding-left: 1.5em;
+        margin: 1em 0;
+      }
+
+      .prose li {
+        margin: 0.45em 0;
+      }
+
+      .prose hr {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 2.4em 0;
+      }
+
+      .prose a {
+        color: var(--accent);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      /* 页脚 */
+      .site-footer {
+        margin-top: 80px;
+        border-top: 1px solid var(--border);
+        padding: 36px 0 48px;
+        color: var(--text-muted);
+        font-size: 13px;
+      }
+
+      .footer-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      /* 全局轻提示与图片灯箱 */
+      .toast-box {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        z-index: 200;
+        padding: 12px 20px;
+        border-radius: var(--radius-card);
+        background: var(--text);
+        color: var(--bg);
+        font-size: 13.5px;
+        font-weight: 500;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+        display: none;
+      }
+
+      .lightbox-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 300;
+        background: rgba(20, 18, 16, 0.88);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+        cursor: zoom-out;
+      }
+
+      .lightbox-backdrop img {
+        max-width: 94vw;
+        max-height: 90vh;
+        border-radius: 8px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      @media (max-width: 760px) {
+        .brand-sub {
+          display: none;
+        }
+        .header-inner {
+          height: auto;
+          padding: 12px 0;
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .nav-actions {
+          width: 100%;
+          justify-content: space-between;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="/" class="brand">
+          <span class="brand-mark"></span>
+          <span class="brand-title" id="nav-site-title">栖迟手札</span>
+          <span class="brand-sub" id="nav-site-sub">个人专栏与数字花园</span>
+        </a>
+
+        <nav class="nav-actions">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <a href="/" class={`nav-link ${activeNav === 'home' ? 'active' : ''}`}>专栏首页</a>
+            <a href="/archive/" class={`nav-link ${activeNav === 'archive' ? 'active' : ''}`}>文章归档</a>
+            <a href="/admin/" class={`nav-link ${activeNav === 'admin' ? 'active' : ''}`}>写作工作台</a>
+          </div>
+
+          <div class="theme-switcher" role="group" aria-label="视觉风格切换">
+            <button type="button" class="theme-opt" data-set-theme="paper" title="纸墨人文 (暖白宣纸 + 衬线排版)">纸墨</button>
+            <button type="button" class="theme-opt" data-set-theme="craft" title="极简笔记 (纯净灰白 + 现代无衬线)">极简</button>
+            <button type="button" class="theme-opt" data-set-theme="magazine" title="日系杂志 (米杏画报 + 印章红)">杂志</button>
+            <button type="button" class="theme-opt" data-set-theme="night" title="护眼夜读 (暖墨暗色)">夜读</button>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div>
+          <strong id="footer-site-title" style="color:var(--text);">栖迟手札</strong>
+          <span style="margin:0 8px;">·</span>
+          <span id="footer-author-line">独立写作与长期思考记录</span>
+        </div>
+        <div style="display:flex;gap:18px;align-items:center;">
+          <a href="/" style="color:var(--text-muted);">首页</a>
+          <a href="/archive/" style="color:var(--text-muted);">按年归档</a>
+          <a href="/admin/" style="color:var(--text-muted);">管理后台</a>
+        </div>
+      </div>
+    </footer>
+
+    <div id="cms-toast" class="toast-box"></div>
+    <div id="cms-lightbox" class="lightbox-backdrop" onclick="this.style.display='none'">
+      <img id="cms-lightbox-img" alt="放大预览" />
+    </div>
+
+    <script is:inline>
+      // 主题切换逻辑：优先遵循读者手动选择的主题；若未手动选择则采用站点后台设置的 defaultTheme
+      window.applyCmsTheme = function (themeName, persistUserChoice = false) {
+        const valid = ['paper', 'craft', 'magazine', 'night'];
+        const target = valid.includes(themeName) ? themeName : 'paper';
+        document.documentElement.setAttribute('data-theme', target);
+        if (persistUserChoice) {
+          localStorage.setItem('cms-visual-theme', target);
+        }
+        document.querySelectorAll('.theme-opt[data-set-theme]').forEach((btn) => {
+          btn.classList.toggle('active', btn.getAttribute('data-set-theme') === target);
+        });
+      };
+
+      (function initThemeButtons() {
+        const cur = document.documentElement.getAttribute('data-theme') || 'paper';
+        window.applyCmsTheme(cur, false);
+        document.querySelectorAll('.theme-opt[data-set-theme]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            window.applyCmsTheme(btn.getAttribute('data-set-theme'), true);
+          });
+        });
+      })();
+
+      window.syncGlobalSiteBranding = function (settings) {
+        if (!settings) return;
+        if (settings.siteTitle) {
+          const navTitle = document.getElementById('nav-site-title');
+          const footTitle = document.getElementById('footer-site-title');
+          if (navTitle) navTitle.textContent = settings.siteTitle;
+          if (footTitle) footTitle.textContent = settings.siteTitle;
+        }
+        if (settings.authorName) {
+          const navSub = document.getElementById('nav-site-sub');
+          const footAuthor = document.getElementById('footer-author-line');
+          if (navSub) navSub.textContent = `${settings.authorName}的个人专栏`;
+          if (footAuthor) {
+            footAuthor.textContent = `${settings.authorName} · ${settings.authorRole || '个人专栏'}`;
+          }
+        }
+        if (settings.defaultTheme && !localStorage.getItem('cms-visual-theme')) {
+          window.applyCmsTheme(settings.defaultTheme, false);
+        }
+      };
+
+      window.showCmsToast = function (msg) {
+        const el = document.getElementById('cms-toast');
+        if (!el) return;
+        el.textContent = msg;
+        el.style.display = 'block';
+        clearTimeout(window.__cmsToastTimer);
+        window.__cmsToastTimer = setTimeout(() => {
+          el.style.display = 'none';
+        }, 3200);
+      };
+
+      window.copyCodeBlock = function (btn) {
+        const codeEl =
+          btn.closest('.code-block-wrap')?.querySelector('code') ||
+          btn.parentElement?.querySelector('code');
+        if (!codeEl) return;
+        navigator.clipboard.writeText(codeEl.innerText).then(() => {
+          const prev = btn.textContent;
+          btn.textContent = '已复制 ✓';
+          setTimeout(() => {
+            btn.textContent = prev;
+          }, 1600);
+        });
+      };
+
+      // 同步轻量兜底（在 marked + highlight.js + dompurify 模块加载完成瞬间自动接管）
+      if (!window.renderSimpleMarkdown) {
+        window.renderSimpleMarkdown = function (md) {
+          return String(md || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        };
+      }
+
+      window.openCmsLightbox = function (src) {
+        if (!src) return;
+        const box = document.getElementById('cms-lightbox');
+        const img = document.getElementById('cms-lightbox-img');
+        if (box && img) {
+          img.src = src;
+          box.style.display = 'flex';
+        }
+      };
+    </script>
+  </body>
+</html>

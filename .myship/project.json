@@ -1,0 +1,34 @@
+{
+  "project": "myship-cms",
+  "dir": "./dist",
+  "prodDomain": "myship-cms",
+  "backend": {
+    "enabled": true,
+    "provider": "scf",
+    "region": "ap-guangzhou",
+    "entry": "server/index.mjs",
+    "prefix": "/api",
+    "functionName": "myship-myship-cms",
+    "gatewayToken": null,
+    "role": "SCF_ExecuteRole"
+  },
+  "resources": {
+    "storage": {
+      "enabled": true,
+      "provider": "cos",
+      "env": "prod",
+      "isolation": "shared",
+      "dataPrefix": "data/myship-cms/",
+      "filesPrefix": "files/myship-cms/"
+    },
+    "db": {
+      "enabled": true,
+      "provider": "turso",
+      "env": "prod",
+      "dbName": "myship-myship-cms",
+      "isolation": "shared",
+      "updatedAt": "2026-11-03T16:23:01.126Z"
+    }
+  },
+  "updatedAt": "2026-11-03T16:23:30.516Z"
+}

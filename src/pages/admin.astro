@@ -1,0 +1,1191 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="写作工作台 · 栖迟手札" activeNav="admin">
+  <style is:global>
+    /* 1. 独立优雅的书房登录门禁 (Login Gate) */
+    .login-gate-wrap {
+      min-height: 68vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+      background: var(--bg-card);
+      border: var(--card-border);
+      border-radius: var(--radius-card);
+      padding: 38px 36px;
+      box-shadow: var(--shadow-card);
+      text-align: center;
+    }
+
+    .login-emblem {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .login-title {
+      font-family: var(--font-display);
+      font-size: 23px;
+      margin: 0 0 8px;
+      color: var(--text);
+    }
+
+    .login-desc {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      margin: 0 0 24px;
+      line-height: 1.65;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: var(--radius-btn);
+      border: 1px solid var(--border-strong);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      margin-bottom: 14px;
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.08em;
+    }
+
+    .login-input:focus {
+      border-color: var(--accent);
+    }
+
+    .login-hint {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* 2. 工作台主视图 */
+    .studio-header {
+      padding: 28px 0 20px;
+      border-bottom: var(--header-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .studio-tabs {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 8px 16px;
+      border-radius: var(--radius-btn);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 13.5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fffdf9;
+      border-color: var(--accent);
+    }
+
+    .studio-grid {
+      display: grid;
+      grid-template-columns: 330px 1fr;
+      gap: 24px;
+      margin: 24px 0 56px;
+      align-items: start;
+    }
+
+    .studio-grid.zen-mode {
+      grid-template-columns: 1fr;
+    }
+
+    .studio-grid.zen-mode #sidebar-panel {
+      display: none;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: var(--card-border);
+      border-radius: var(--radius-card);
+      padding: 22px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .panel-title {
+      margin: 0 0 16px;
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .post-list-item {
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      margin-bottom: 10px;
+      background: var(--bg);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .post-list-item:hover,
+    .post-list-item.active {
+      border-color: var(--accent);
+      background: var(--bg-card);
+    }
+
+    .post-item-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 14.5px;
+      margin: 6px 0;
+      color: var(--text);
+    }
+
+    .post-item-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 9px;
+    }
+
+    .mini-btn {
+      padding: 3px 9px;
+      font-size: 11.5px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .mini-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .form-row {
+      margin-bottom: 16px;
+    }
+
+    .form-row label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 14px;
+    }
+
+    .form-grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    input[type='text'],
+    input[type='password'],
+    select,
+    textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: var(--radius-btn);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    /* Markdown 工具栏与双栏实时预览 */
+    .md-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 8px 10px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: var(--radius-card) var(--radius-card) 0 0;
+    }
+
+    .md-tool-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .md-tool-btn {
+      padding: 4px 9px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .md-tool-btn:hover {
+      background: var(--bg-card);
+      border-color: var(--border);
+      color: var(--accent);
+    }
+
+    .editor-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid var(--border);
+      border-radius: 0 0 var(--radius-card) var(--radius-card);
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .editor-textarea {
+      border: none !important;
+      border-right: 1px solid var(--border) !important;
+      border-radius: 0 !important;
+      padding: 18px !important;
+      font-family: var(--font-mono) !important;
+      font-size: 13.5px !important;
+      line-height: 1.75 !important;
+      min-height: 440px;
+      resize: vertical;
+    }
+
+    .editor-textarea.drag-over {
+      background: var(--accent-soft) !important;
+    }
+
+    .preview-pane {
+      padding: 18px 24px;
+      background: var(--bg-card);
+      min-height: 440px;
+      max-height: 620px;
+      overflow-y: auto;
+    }
+
+    .cover-upload-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .media-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 10px;
+      background: var(--bg);
+    }
+
+    .media-card img {
+      width: 100%;
+      height: 118px;
+      object-fit: cover;
+      border-radius: 4px;
+      background: var(--bg-elevated);
+    }
+
+    @media (max-width: 960px) {
+      .studio-grid {
+        grid-template-columns: 1fr;
+      }
+      .editor-split {
+        grid-template-columns: 1fr;
+      }
+      .form-grid-2,
+      .form-grid-4 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <!-- 1. 未登录态：独立优雅的私人书房门禁 -->
+  <div class="container" id="login-gate-container">
+    <div class="login-gate-wrap">
+      <form class="login-card" id="login-form">
+        <div class="login-emblem">✒️</div>
+        <h1 class="login-title">解锁写作工作台</h1>
+        <p class="login-desc">
+          请输入管理员口令以进入文章创作、草稿箱管理与媒体库编排。
+        </p>
+        <input
+          type="password"
+          id="login-password-input"
+          class="login-input"
+          placeholder="请输入管理员口令 (CMS_ADMIN_TOKEN)"
+          autocomplete="current-password"
+          required
+        />
+        <button type="submit" class="nav-btn primary" style="width:100%;justify-content:center;padding:10px;">
+          进入书房工作台 →
+        </button>
+        <div class="login-hint">
+          💡 本地开发 (`myship dev`) 默认口令为 <code>myship-dev-admin</code><br />
+          线上部署请通过 <code>myship env set CMS_ADMIN_TOKEN=你的密码</code> 配置
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. 已登录态：完整创作与管理工作台 -->
+  <div class="container" id="studio-workspace" style="display:none;">
+    <div class="studio-header">
+      <div>
+        <h1 style="margin:0;font-family:var(--font-display);font-size:24px;">✒️ 写作与出版工作台</h1>
+        <p style="margin:4px 0 0;font-size:13px;color:var(--text-muted);" id="studio-status-line">
+          支持在正文中直接 <code>Cmd+V</code> 粘贴截图或拖拽图片自动直传云端存储
+        </p>
+      </div>
+      <div class="studio-tabs">
+        <button class="tab-btn active" data-tab="posts">📝 文章写作</button>
+        <button class="tab-btn" data-tab="media">🖼️ 媒体图库</button>
+        <button class="tab-btn" data-tab="settings">🎨 专栏与主题设置</button>
+        <button class="nav-btn" id="logout-btn" title="安全退出管理员会话">退出登录</button>
+      </div>
+    </div>
+
+    <!-- TAB 1: 文章列表与 Markdown 编辑器 -->
+    <section id="tab-posts" class="studio-grid">
+      <div class="panel" id="sidebar-panel">
+        <div class="panel-title">
+          <span>📚 文章目录</span>
+          <button class="nav-btn primary" id="new-post-btn" style="padding:5px 12px;font-size:12.5px;">
+            + 撰写新篇
+          </button>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;" id="admin-status-filter">
+          <button class="mini-btn" data-status="all" style="border-color:var(--accent);color:var(--accent);">全部</button>
+          <button class="mini-btn" data-status="published">已发布</button>
+          <button class="mini-btn" data-status="draft">草稿箱</button>
+          <button class="mini-btn" data-status="archived">归档</button>
+        </div>
+        <div id="admin-post-list">正在加载...</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span id="editor-heading">✨ 撰写新文章</span>
+            <span id="editor-word-stats" style="font-family:var(--font-body);font-size:12px;font-weight:400;color:var(--text-muted);">
+              0 字 · 预计 1 分钟阅读
+            </span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="nav-btn" id="toggle-zen-btn">🧘 专注模式</button>
+            <button type="button" class="nav-btn" id="save-draft-btn">💾 存为草稿</button>
+            <button type="button" class="nav-btn primary" id="publish-post-btn">🚀 发布上线</button>
+          </div>
+        </div>
+
+        <input type="hidden" id="post-id" />
+        <div class="form-grid-2 form-row">
+          <div>
+            <label>文章标题 *</label>
+            <input type="text" id="post-title" placeholder="输入温和而有力量的标题..." />
+          </div>
+          <div>
+            <label>自定义 URL Slug (留空自动生成)</label>
+            <input type="text" id="post-slug" placeholder="例如: calm-software-notes" />
+          </div>
+        </div>
+
+        <div class="form-grid-4 form-row">
+          <div>
+            <label>所属栏目</label>
+            <select id="post-category">
+              <option value="essay">随笔思考 (Essay)</option>
+              <option value="design">器物与排版 (Design)</option>
+              <option value="craft">构建手记 (Craft)</option>
+              <option value="notes">日常札记 (Notes)</option>
+            </select>
+          </div>
+          <div>
+            <label>标签 (逗号分隔)</label>
+            <input type="text" id="post-tags" placeholder="数字花园, 长期主义, 随笔" />
+          </div>
+          <div>
+            <label>发布状态</label>
+            <select id="post-status">
+              <option value="published">🟢 已发布</option>
+              <option value="draft">🟡 草稿箱</option>
+              <option value="archived">⚪ 已归档</option>
+            </select>
+          </div>
+          <div style="padding-bottom:8px;">
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin:0;font-size:13px;">
+              <input type="checkbox" id="post-featured" style="width:16px;height:16px;" />
+              <span>✦ 设为刊首置顶</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>文章导读摘要 (展示在首页卡片与文章开篇导语)</label>
+          <input type="text" id="post-summary" placeholder="用一两句话概括本文的核心思考..." />
+        </div>
+
+        <div class="form-row">
+          <label>文章封面插图 (可上传本地图片直传 COS，或一键生成人文插画封面)</label>
+          <div class="cover-upload-bar">
+            <input
+              type="text"
+              id="post-cover-key"
+              placeholder="留空为无图纯文字卡片，或点击右侧上传/生成封面"
+              style="flex:1;"
+            />
+            <label class="nav-btn" style="margin:0;cursor:pointer;">
+              📤 上传封面图
+              <input type="file" id="cover-file-input" accept="image/*" style="display:none;" />
+            </label>
+            <button type="button" class="nav-btn" id="gen-svg-cover-btn">
+              🎨 生成社论插画封面
+            </button>
+          </div>
+          <div id="cover-preview-box" style="margin-top:10px;display:none;">
+            <img
+              id="cover-preview-img"
+              style="max-height:110px;border-radius:var(--radius-card);border:1px solid var(--border);"
+            />
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:0;">
+          <div class="md-toolbar">
+            <div class="md-tool-group">
+              <button type="button" class="md-tool-btn" data-md-act="h2">H2 标题</button>
+              <button type="button" class="md-tool-btn" data-md-act="h3">H3 小节</button>
+              <button type="button" class="md-tool-btn" data-md-act="bold">B 加粗</button>
+              <button type="button" class="md-tool-btn" data-md-act="quote">“ 引用</button>
+              <button type="button" class="md-tool-btn" data-md-act="code">&lt;/&gt; 代码块</button>
+              <button type="button" class="md-tool-btn" data-md-act="link">🔗 链接</button>
+              <label class="md-tool-btn" style="margin:0;cursor:pointer;color:var(--accent);">
+                📷 插入正文图片 (或直接粘贴/拖拽图片到下方)
+                <input type="file" id="inline-img-input" accept="image/*" style="display:none;" />
+              </label>
+            </div>
+            <span id="autosave-hint" style="font-size:11.5px;color:var(--text-muted);">
+              支持 Markdown 实时预览
+            </span>
+          </div>
+
+          <div class="editor-split">
+            <textarea
+              id="post-content"
+              class="editor-textarea"
+              placeholder="在此开始安静书写... 支持直接粘贴剪贴板截图 (Cmd+V) 或将图片文件拖拽至此区域自动上传并插入 Markdown 语法。"
+            ></textarea>
+            <div class="preview-pane prose" id="post-preview"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: 媒体图库 -->
+    <section id="tab-media" style="display:none;margin:24px 0 56px;">
+      <div class="panel">
+        <div class="panel-title">
+          <span>🖼️ 云端私有媒体库 (COS 预签名直传)</span>
+          <label class="nav-btn primary" style="margin:0;cursor:pointer;">
+            📤 上传新图片
+            <input type="file" id="media-lib-input" accept="image/*" style="display:none;" />
+          </label>
+        </div>
+        <p style="font-size:13.5px;color:var(--text-muted);margin-top:0;">
+          点击「复制正文引用」即可获得永不过期的 <code>![图片](/api/cms/media/raw?key=...)</code> 语法。
+        </p>
+        <div id="media-list-grid" class="media-grid">正在加载媒体列表...</div>
+      </div>
+    </section>
+
+    <!-- TAB 3: 专栏名片与全站默认主题设置 -->
+    <section id="tab-settings" style="display:none;margin:24px 0 56px;">
+      <div class="panel" style="max-width:700px;">
+        <div class="panel-title">
+          <span>🎨 个人专栏信息与全站默认视觉主题</span>
+        </div>
+        <div class="form-grid-2 form-row">
+          <div>
+            <label>专栏主标题 (Site Title)</label>
+            <input type="text" id="cfg-title" placeholder="例如：栖迟手札" />
+          </div>
+          <div>
+            <label>新访客默认视觉风格 (Default Theme)</label>
+            <select id="cfg-default-theme">
+              <option value="paper">📜 纸墨人文 (暖白宣纸 + 衬线社论风)</option>
+              <option value="craft">🌿 极简笔记 (纯净浅灰白 + 现代无衬线风)</option>
+              <option value="magazine">🗞️ 日系杂志 (米杏画报分栏 + 朱砂印章风)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>专栏副标题 / 刊头Slogan</label>
+          <input type="text" id="cfg-subtitle" />
+        </div>
+        <div class="form-grid-2 form-row">
+          <div>
+            <label>作者署名 (Author Name)</label>
+            <input type="text" id="cfg-author" />
+          </div>
+          <div>
+            <label>作者身份标签 (Author Role)</label>
+            <input type="text" id="cfg-role" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label>作者简介名片 (展示在首页右上角)</label>
+          <textarea id="cfg-bio" rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <label>首页顶部横幅轻提示 (留空则隐藏横幅，保持页面极简)</label>
+          <input type="text" id="cfg-announcement" placeholder="默认留空，需要发布近期动态时再填写" />
+        </div>
+        <button class="nav-btn primary" id="save-settings-btn">💾 保存专栏配置并同步全站</button>
+      </div>
+    </section>
+  </div>
+
+  <script is:inline>
+    let allAdminPosts = [];
+    let statusFilter = 'all';
+    let activePostId = null;
+    let coverPaletteIdx = 0;
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function getSessionToken() {
+      return sessionStorage.getItem('myship_cms_session_token') || '';
+    }
+
+    function adminFetch(url, options = {}) {
+      const token = getSessionToken();
+      const headers = {
+        ...(options.headers || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+      return fetch(url, { ...options, headers, credentials: 'same-origin' });
+    }
+
+    // ==================== 1. 登录门禁与会话生命周期 ====================
+    async function checkInitialAuthSession() {
+      try {
+        const res = await adminFetch('/api/cms/auth/verify');
+        const data = await res.json();
+        if (data.ok) {
+          unlockWorkspaceUI();
+          return;
+        }
+      } catch {
+        // ignore
+      }
+      lockWorkspaceUI();
+    }
+
+    function unlockWorkspaceUI() {
+      document.getElementById('login-gate-container').style.display = 'none';
+      document.getElementById('studio-workspace').style.display = 'block';
+      loadSettings();
+      loadAdminPosts();
+    }
+
+    function lockWorkspaceUI() {
+      document.getElementById('studio-workspace').style.display = 'none';
+      document.getElementById('login-gate-container').style.display = 'block';
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pwd = document.getElementById('login-password-input').value.trim();
+      if (!pwd) return;
+      const res = await fetch('/api/cms/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pwd }),
+        credentials: 'same-origin',
+      });
+      const data = await res.json();
+      if (data.ok) {
+        if (data.sessionToken) {
+          sessionStorage.setItem('myship_cms_session_token', data.sessionToken);
+        }
+        document.getElementById('login-password-input').value = '';
+        window.showCmsToast('✒️ 欢迎回到写作工作台');
+        unlockWorkspaceUI();
+      } else {
+        window.showCmsToast(`❌ ${data.error || '口令验证失败'}`);
+      }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await fetch('/api/cms/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      sessionStorage.removeItem('myship_cms_session_token');
+      window.showCmsToast('🔒 已安全退出工作台');
+      lockWorkspaceUI();
+    });
+
+    // ==================== 2. Tab 切换与专注模式 ====================
+    document.querySelectorAll('.studio-tabs .tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.studio-tabs .tab-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.getAttribute('data-tab');
+        document.getElementById('tab-posts').style.display = tab === 'posts' ? 'grid' : 'none';
+        document.getElementById('tab-media').style.display = tab === 'media' ? 'block' : 'none';
+        document.getElementById('tab-settings').style.display = tab === 'settings' ? 'block' : 'none';
+        if (tab === 'media') loadMediaLibrary();
+      });
+    });
+
+    document.getElementById('toggle-zen-btn').addEventListener('click', (e) => {
+      const grid = document.getElementById('tab-posts');
+      grid.classList.toggle('zen-mode');
+      e.currentTarget.textContent = grid.classList.contains('zen-mode')
+        ? '📂 展开侧栏'
+        : '🧘 专注模式';
+    });
+
+    // ==================== 3. 编辑器预览、字数统计与快捷键工具栏 ====================
+    function updatePreviewAndStats() {
+      const md = document.getElementById('post-content').value;
+      document.getElementById('post-preview').innerHTML = window.renderSimpleMarkdown(md);
+      const clean = md.replace(/```[\s\S]*?```/g, ' ').replace(/[#>*_`~-]/g, '');
+      const cjk = (clean.match(/[\u4e00-\u9fa5]/g) || []).length;
+      const en = clean.replace(/[\u4e00-\u9fa5]/g, ' ').split(/\s+/).filter(Boolean).length;
+      const total = cjk + en;
+      const mins = Math.max(1, Math.ceil(total / 320));
+      document.getElementById('editor-word-stats').textContent = `${total} 字 · 预计 ${mins} 分钟阅读`;
+
+      // 本地防丢失自动暂存
+      if (!activePostId && md.trim()) {
+        localStorage.setItem('cms_draft_autosave_content', md);
+      }
+    }
+
+    const contentArea = document.getElementById('post-content');
+    contentArea.addEventListener('input', updatePreviewAndStats);
+    window.addEventListener('cms-markdown-ready', updatePreviewAndStats);
+
+    function insertTextAtCursor(textarea, textToInsert) {
+      const start = textarea.selectionStart ?? textarea.value.length;
+      const end = textarea.selectionEnd ?? textarea.value.length;
+      const before = textarea.value.slice(0, start);
+      const after = textarea.value.slice(end);
+      textarea.value = before + textToInsert + after;
+      const nextPos = start + textToInsert.length;
+      textarea.selectionStart = nextPos;
+      textarea.selectionEnd = nextPos;
+      textarea.focus();
+      updatePreviewAndStats();
+    }
+
+    document.querySelectorAll('.md-tool-btn[data-md-act]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const act = btn.getAttribute('data-md-act');
+        const map = {
+          h2: '\n## 小节标题\n',
+          h3: '\n### 子标题\n',
+          bold: '**重点文字**',
+          quote: '\n> 在此输入引用或核心观点\n',
+          code: '\n```javascript\n// 代码示例\n```\n',
+          link: '[链接文字](https://)',
+        };
+        if (map[act]) insertTextAtCursor(contentArea, map[act]);
+      });
+    });
+
+    // ==================== 4. 粘贴截图 (Cmd+V) / 拖拽图片直传 COS 并插入正文 ====================
+    async function uploadBlobToCosViaPresign(filename, blobOrFile) {
+      const presignRes = await adminFetch('/api/cms/media/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename }),
+      });
+      const presignData = await presignRes.json();
+      if (!presignData.ok) throw new Error(presignData.error || '预签名失败');
+
+      const putRes = await fetch(presignData.uploadUrl, {
+        method: 'PUT',
+        body: blobOrFile,
+      });
+      if (!putRes.ok) {
+        throw new Error(`COS 直传失败 (HTTP ${putRes.status})`);
+      }
+      return presignData;
+    }
+
+    async function handleInlineEditorImageUpload(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      const placeholder = `![正在上传 ${file.name}...]()`;
+      insertTextAtCursor(contentArea, `\n${placeholder}\n`);
+      window.showCmsToast(`☁️ 正在将图片 [${file.name}] 直传至云端存储...`);
+      try {
+        const out = await uploadBlobToCosViaPresign(file.name || 'pasted-image.png', file);
+        const finalMd = `![${file.name.replace(/\.[^.]+$/, '')}](${out.permanentPath})`;
+        contentArea.value = contentArea.value.replace(placeholder, finalMd);
+        updatePreviewAndStats();
+        window.showCmsToast('✅ 图片已直传云端并插入正文！');
+      } catch (err) {
+        contentArea.value = contentArea.value.replace(placeholder, '');
+        updatePreviewAndStats();
+        window.showCmsToast(`❌ 图片上传失败: ${err.message}`);
+      }
+    }
+
+    contentArea.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items || [];
+      for (const item of items) {
+        if (item.type && item.type.startsWith('image/')) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) handleInlineEditorImageUpload(file);
+          return;
+        }
+      }
+    });
+
+    contentArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      contentArea.classList.add('drag-over');
+    });
+    contentArea.addEventListener('dragleave', () => {
+      contentArea.classList.remove('drag-over');
+    });
+    contentArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      contentArea.classList.remove('drag-over');
+      const file = e.dataTransfer?.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        handleInlineEditorImageUpload(file);
+      }
+    });
+
+    document.getElementById('inline-img-input').addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) handleInlineEditorImageUpload(file);
+      e.target.value = '';
+    });
+
+    // ==================== 5. 文章 CRUD 与置顶/状态流转 ====================
+    function resetEditor() {
+      activePostId = null;
+      document.getElementById('post-id').value = '';
+      document.getElementById('editor-heading').textContent = '✨ 撰写新文章';
+      document.getElementById('post-title').value = '';
+      document.getElementById('post-slug').value = '';
+      document.getElementById('post-category').value = 'essay';
+      document.getElementById('post-tags').value = '随笔, 长期主义';
+      document.getElementById('post-status').value = 'published';
+      document.getElementById('post-featured').checked = false;
+      document.getElementById('post-cover-key').value = '';
+      document.getElementById('cover-preview-box').style.display = 'none';
+      document.getElementById('post-summary').value = '';
+      const savedLocal = localStorage.getItem('cms_draft_autosave_content');
+      document.getElementById('post-content').value =
+        savedLocal || '## 引言\n\n在此开始记录你的思考...';
+      updatePreviewAndStats();
+      renderAdminPostList();
+    }
+
+    function selectPostForEdit(post) {
+      activePostId = post.id;
+      document.getElementById('post-id').value = String(post.id);
+      document.getElementById('editor-heading').textContent = `✏️ 编辑文章 #${post.id}`;
+      document.getElementById('post-title').value = post.title || '';
+      document.getElementById('post-slug').value = post.slug || '';
+      document.getElementById('post-category').value = post.category || 'essay';
+      document.getElementById('post-tags').value = (post.tags || []).join(', ');
+      document.getElementById('post-status').value = post.status || 'draft';
+      document.getElementById('post-featured').checked = Boolean(post.featured);
+      document.getElementById('post-cover-key').value = post.cover_key || '';
+      if (post.coverUrl) {
+        document.getElementById('cover-preview-img').src = post.coverUrl;
+        document.getElementById('cover-preview-box').style.display = 'block';
+      } else {
+        document.getElementById('cover-preview-box').style.display = 'none';
+      }
+      document.getElementById('post-summary').value = post.summary || '';
+      document.getElementById('post-content').value = post.content || '';
+      updatePreviewAndStats();
+      renderAdminPostList();
+    }
+
+    function renderAdminPostList() {
+      const box = document.getElementById('admin-post-list');
+      const filtered =
+        statusFilter === 'all'
+          ? allAdminPosts
+          : allAdminPosts.filter((p) => p.status === statusFilter);
+      if (filtered.length === 0) {
+        box.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">当前筛选下暂无文章</div>`;
+        return;
+      }
+      box.innerHTML = filtered
+        .map((p) => {
+          const isAct = p.id === activePostId ? 'active' : '';
+          const stCls = `status-${p.status}`;
+          const toggleStatusBtn =
+            p.status === 'published'
+              ? `<button class="mini-btn" onclick="event.stopPropagation();window.quickUpdatePost(${p.id}, { status: 'draft' })">撤回草稿</button>`
+              : `<button class="mini-btn" style="color:var(--emerald);" onclick="event.stopPropagation();window.quickUpdatePost(${p.id}, { status: 'published' })">发布上线</button>`;
+          const togglePinBtn = p.featured
+            ? `<button class="mini-btn" style="color:var(--accent);border-color:var(--accent);" onclick="event.stopPropagation();window.quickUpdatePost(${p.id}, { featured: false })">★ 已置顶</button>`
+            : `<button class="mini-btn" onclick="event.stopPropagation();window.quickUpdatePost(${p.id}, { featured: true })">☆ 置顶</button>`;
+          return `
+            <div class="post-list-item ${isAct}" onclick="window.editPostById(${p.id})">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="badge-pill ${stCls}">${escapeHtml(p.status)}</span>
+                <span style="font-size:11.5px;color:var(--text-muted);">${p.wordCount || 0} 字 · ${p.views} 阅读</span>
+              </div>
+              <div class="post-item-title">${p.featured ? '✦ ' : ''}${escapeHtml(p.title)}</div>
+              <div class="post-item-actions">
+                ${toggleStatusBtn}
+                ${togglePinBtn}
+                <a class="mini-btn" href="/post/?slug=${encodeURIComponent(p.slug)}" target="_blank" onclick="event.stopPropagation()">预览</a>
+                <button class="mini-btn" style="color:var(--rose);" onclick="event.stopPropagation();window.deletePostById(${p.id})">删除</button>
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    window.editPostById = function (id) {
+      const found = allAdminPosts.find((p) => p.id === id);
+      if (found) selectPostForEdit(found);
+    };
+
+    window.quickUpdatePost = async function (id, patch) {
+      const res = await adminFetch('/api/cms/posts/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...patch }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        window.showCmsToast('✅ 文章状态已更新');
+        await loadAdminPosts();
+        if (activePostId === id && data.post) selectPostForEdit(data.post);
+      } else {
+        window.showCmsToast(`❌ 更新失败: ${data.error}`);
+      }
+    };
+
+    window.deletePostById = async function (id) {
+      const res = await adminFetch(`/api/cms/posts?id=${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.ok) {
+        window.showCmsToast('🗑️ 文章已删除');
+        if (activePostId === id) resetEditor();
+        await loadAdminPosts();
+      } else {
+        window.showCmsToast(`❌ 删除失败: ${data.error}`);
+      }
+    };
+
+    async function loadAdminPosts() {
+      const res = await adminFetch('/api/cms/posts?status=all');
+      const data = await res.json();
+      if (!data.ok) {
+        if (res.status === 401 || res.status === 403) lockWorkspaceUI();
+        return;
+      }
+      allAdminPosts = data.posts || [];
+      const urlEditId = Number(new URLSearchParams(window.location.search).get('edit') || 0);
+      if (urlEditId && !activePostId) {
+        const target = allAdminPosts.find((p) => p.id === urlEditId);
+        if (target) {
+          selectPostForEdit(target);
+          return;
+        }
+      }
+      if (!activePostId && allAdminPosts.length > 0) {
+        selectPostForEdit(allAdminPosts[0]);
+      } else {
+        renderAdminPostList();
+      }
+    }
+
+    async function saveCurrentPost(forcedStatus) {
+      const title = document.getElementById('post-title').value.trim();
+      if (!title) {
+        window.showCmsToast('⚠️ 请先填写文章标题');
+        return;
+      }
+      const status = forcedStatus || document.getElementById('post-status').value;
+      document.getElementById('post-status').value = status;
+      const payload = {
+        id: document.getElementById('post-id').value || null,
+        title,
+        slug: document.getElementById('post-slug').value.trim(),
+        category: document.getElementById('post-category').value,
+        tags: document.getElementById('post-tags').value,
+        status,
+        featured: document.getElementById('post-featured').checked,
+        cover_key: document.getElementById('post-cover-key').value.trim(),
+        summary: document.getElementById('post-summary').value.trim(),
+        content: document.getElementById('post-content').value,
+      };
+      const res = await adminFetch('/api/cms/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        localStorage.removeItem('cms_draft_autosave_content');
+        window.showCmsToast(
+          status === 'published' ? '🚀 文章已保存并正式刊发！' : '💾 草稿已保存至云端数据库！'
+        );
+        await loadAdminPosts();
+        if (data.post) selectPostForEdit(data.post);
+      } else {
+        window.showCmsToast(`❌ 保存失败: ${data.error}`);
+      }
+    }
+
+    document.getElementById('new-post-btn').addEventListener('click', resetEditor);
+    document.getElementById('save-draft-btn').addEventListener('click', () => saveCurrentPost('draft'));
+    document.getElementById('publish-post-btn').addEventListener('click', () => saveCurrentPost('published'));
+
+    document.querySelectorAll('#admin-status-filter .mini-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#admin-status-filter .mini-btn').forEach((b) => {
+          b.style.borderColor = 'var(--border)';
+          b.style.color = 'var(--text-secondary)';
+        });
+        btn.style.borderColor = 'var(--accent)';
+        btn.style.color = 'var(--accent)';
+        statusFilter = btn.getAttribute('data-status') || 'all';
+        renderAdminPostList();
+      });
+    });
+
+    // ==================== 6. 封面上传与温润人文插画封面生成 ====================
+    document.getElementById('cover-file-input').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        window.showCmsToast('☁️ 正在直传封面图片至 COS...');
+        const out = await uploadBlobToCosViaPresign(file.name, file);
+        document.getElementById('post-cover-key').value = out.key;
+        document.getElementById('cover-preview-img').src = out.previewUrl;
+        document.getElementById('cover-preview-box').style.display = 'block';
+        window.showCmsToast('✅ 封面已直传至云端存储');
+      } catch (err) {
+        window.showCmsToast(`❌ 上传失败: ${err.message}`);
+      }
+    });
+
+    document.getElementById('gen-svg-cover-btn').addEventListener('click', async () => {
+      const title = (document.getElementById('post-title').value || '栖迟手札 · 专栏随笔').slice(0, 26);
+      const summary = (document.getElementById('post-summary').value || 'Calm reading & long-term writing').slice(0, 42);
+      const schemes = [
+        { bg: '#F4EFE6', card: '#FAF7F2', ink: '#1C1917', muted: '#78716C', accent: '#B45309', line: '#E5DEC9' },
+        { bg: '#EEF2F0', card: '#F7FAF8', ink: '#16241E', muted: '#5B6E65', accent: '#0F766E', line: '#D5E0DA' },
+        { bg: '#F5ECE6', card: '#FCF8F5', ink: '#231815', muted: '#7C665E', accent: '#C83E2B', line: '#E8D6CC' },
+      ];
+      const p = schemes[coverPaletteIdx++ % schemes.length];
+      const safeTitle = title.replace(/[<>&"]/g, '');
+      const safeSub = summary.replace(/[<>&"]/g, '');
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675">
+        <rect width="1200" height="675" fill="${p.bg}"/>
+        <rect x="48" y="48" width="1104" height="579" rx="12" fill="${p.card}" stroke="${p.line}" stroke-width="2"/>
+        <line x1="48" y1="132" x2="1152" y2="132" stroke="${p.line}" stroke-width="1.5"/>
+        <line x1="880" y1="132" x2="880" y2="627" stroke="${p.line}" stroke-width="1.5"/>
+        <circle cx="1016" cy="380" r="88" fill="none" stroke="${p.accent}" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.6"/>
+        <circle cx="1016" cy="380" r="38" fill="${p.accent}" opacity="0.15"/>
+        <text x="96" y="98" fill="${p.accent}" font-family="Georgia, serif" font-size="18" font-weight="700" letter-spacing="3">EDITORIAL ESSAY</text>
+        <text x="96" y="300" fill="${p.ink}" font-family="Songti SC, Noto Serif SC, Georgia, serif" font-size="46" font-weight="700">${safeTitle}</text>
+        <text x="96" y="372" fill="${p.muted}" font-family="PingFang SC, sans-serif" font-size="23">${safeSub}</text>
+        <line x1="96" y1="435" x2="210" y2="435" stroke="${p.accent}" stroke-width="3"/>
+      </svg>`;
+      try {
+        const out = await uploadBlobToCosViaPresign(
+          'editorial-cover.svg',
+          new Blob([svg], { type: 'image/svg+xml' })
+        );
+        document.getElementById('post-cover-key').value = out.key;
+        document.getElementById('cover-preview-img').src = out.previewUrl;
+        document.getElementById('cover-preview-box').style.display = 'block';
+        window.showCmsToast('🎨 已生成社论风插画封面并直传 COS！');
+      } catch (err) {
+        window.showCmsToast(`❌ 生成封面失败: ${err.message}`);
+      }
+    });
+
+    // ==================== 7. 媒体图库与全局设置 ====================
+    async function loadMediaLibrary() {
+      const grid = document.getElementById('media-list-grid');
+      const res = await adminFetch('/api/cms/media');
+      const data = await res.json();
+      if (!data.ok) {
+        grid.innerHTML = `<div style="grid-column:1/-1;padding:36px;text-align:center;color:var(--rose);">${escapeHtml(data.error)}</div>`;
+        return;
+      }
+      const items = data.media || [];
+      if (items.length === 0) {
+        grid.innerHTML = `<div style="grid-column:1/-1;padding:36px;text-align:center;color:var(--text-muted);">媒体库暂无文件，可在右上角上传或在编辑器中直接粘贴图片</div>`;
+        return;
+      }
+      grid.innerHTML = items
+        .map(
+          (m) => `
+          <div class="media-card">
+            <img src="${escapeHtml(m.url)}" alt="${escapeHtml(m.name)}" loading="lazy" />
+            <div style="font-size:11.5px;margin:8px 0;word-break:break-all;color:var(--text-muted);">${escapeHtml(m.name)}</div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap;">
+              <button class="mini-btn" onclick="window.copyMediaMarkdown('${escapeHtml(m.permanentPath)}', '${escapeHtml(m.name)}')">复制正文引用</button>
+              <button class="mini-btn" onclick="window.useMediaAsCover('${escapeHtml(m.key)}', '${escapeHtml(m.url)}')">设为封面</button>
+              <button class="mini-btn" style="color:var(--rose);" onclick="window.deleteMediaItem('${escapeHtml(m.key)}')">删除</button>
+            </div>
+          </div>
+        `
+        )
+        .join('');
+    }
+
+    window.copyMediaMarkdown = function (permPath, name) {
+      const md = `![${name}](${permPath})`;
+      navigator.clipboard.writeText(md).then(() => {
+        window.showCmsToast('📋 已复制永久有效的 Markdown 图片语法！');
+      });
+    };
+
+    window.useMediaAsCover = function (key, url) {
+      document.getElementById('post-cover-key').value = key;
+      document.getElementById('cover-preview-img').src = url;
+      document.getElementById('cover-preview-box').style.display = 'block';
+      document.querySelector('.studio-tabs .tab-btn[data-tab="posts"]').click();
+      window.showCmsToast('✅ 已将该图片设为当前文章封面');
+    };
+
+    window.deleteMediaItem = async function (key) {
+      const res = await adminFetch(`/api/cms/media?key=${encodeURIComponent(key)}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!data.ok) {
+        window.showCmsToast(`❌ 删除失败: ${data.error}`);
+        return;
+      }
+      window.showCmsToast('🗑️ 已删除该媒体文件');
+      loadMediaLibrary();
+    };
+
+    document.getElementById('media-lib-input').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        await uploadBlobToCosViaPresign(file.name, file);
+        window.showCmsToast('✅ 图片已直传至云端媒体库');
+        loadMediaLibrary();
+      } catch (err) {
+        window.showCmsToast(`❌ 上传失败: ${err.message}`);
+      }
+    });
+
+    async function loadSettings() {
+      const res = await fetch('/api/cms/overview');
+      const data = await res.json();
+      if (!data.ok) return;
+      const s = data.settings || {};
+      window.syncGlobalSiteBranding(s);
+      document.getElementById('cfg-title').value = s.siteTitle || '';
+      document.getElementById('cfg-subtitle').value = s.siteSubtitle || '';
+      document.getElementById('cfg-announcement').value = s.announcement || '';
+      document.getElementById('cfg-author').value = s.authorName || '';
+      document.getElementById('cfg-role').value = s.authorRole || '';
+      document.getElementById('cfg-bio').value = s.authorBio || '';
+      document.getElementById('cfg-default-theme').value = s.defaultTheme || 'paper';
+    }
+
+    document.getElementById('save-settings-btn').addEventListener('click', async () => {
+      const chosenTheme = document.getElementById('cfg-default-theme').value;
+      const payload = {
+        siteTitle: document.getElementById('cfg-title').value,
+        siteSubtitle: document.getElementById('cfg-subtitle').value,
+        announcement: document.getElementById('cfg-announcement').value,
+        authorName: document.getElementById('cfg-author').value,
+        authorRole: document.getElementById('cfg-role').value,
+        authorBio: document.getElementById('cfg-bio').value,
+        defaultTheme: chosenTheme,
+      };
+      const res = await adminFetch('/api/cms/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        window.applyCmsTheme(chosenTheme, true);
+        window.syncGlobalSiteBranding(data.settings);
+        window.showCmsToast('🎨 专栏设置与全站默认主题已保存！');
+      } else {
+        window.showCmsToast(`❌ 保存失败: ${data.error}`);
+      }
+    });
+
+    checkInitialAuthSession();
+  </script>
+  <script src="../scripts/markdown.js"></script>
+</BaseLayout>

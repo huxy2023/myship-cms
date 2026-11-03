@@ -1,0 +1,405 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="文章阅读 · 栖迟手札" activeNav="home">
+  <style is:global>
+    .reading-progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent);
+      width: 0%;
+      z-index: 120;
+      transition: width 0.08s linear;
+    }
+
+    .reader-top-bar {
+      margin: 32px 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .article-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 720px) 240px;
+      gap: 48px;
+      justify-content: space-between;
+      align-items: start;
+    }
+
+    .article-sheet {
+      background: var(--bg-card);
+      border: var(--card-border);
+      border-radius: var(--radius-card);
+      padding: 44px 48px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .article-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .article-cat {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .article-title {
+      font-family: var(--font-display);
+      font-size: clamp(26px, 3.6vw, 36px);
+      line-height: 1.28;
+      margin: 0 0 18px;
+      color: var(--text);
+      letter-spacing: -0.015em;
+    }
+
+    .article-summary-lead {
+      font-size: 16px;
+      line-height: 1.78;
+      color: var(--text-secondary);
+      padding: 16px 20px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-card);
+      margin-bottom: 28px;
+      border-left: 3px solid var(--accent);
+    }
+
+    .article-cover {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      border-radius: var(--radius-card);
+      border: 1px solid var(--border);
+      margin-bottom: 32px;
+      cursor: zoom-in;
+    }
+
+    .article-tags-row {
+      margin-top: 38px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .tag-pill {
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      font-size: 12.5px;
+    }
+
+    /* 右侧跟随目录 TOC */
+    .toc-sidebar {
+      position: sticky;
+      top: 96px;
+      background: var(--bg-card);
+      border: var(--card-border);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .toc-heading {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 0 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toc-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .toc-link {
+      display: block;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border-left: 2px solid transparent;
+      transition: all 0.15s ease;
+    }
+
+    .toc-link:hover {
+      color: var(--text);
+      background: var(--bg-elevated);
+    }
+
+    .toc-link.active {
+      color: var(--accent);
+      font-weight: 600;
+      border-left-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .toc-link.level-3 {
+      padding-left: 20px;
+      font-size: 12.5px;
+    }
+
+    /* 上下篇导航 */
+    .post-nav-grid {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+
+    .post-nav-card {
+      background: var(--bg-card);
+      border: var(--card-border);
+      border-radius: var(--radius-card);
+      padding: 18px 22px;
+      box-shadow: var(--shadow-card);
+      transition: border-color 0.15s ease;
+    }
+
+    .post-nav-card:hover {
+      border-color: var(--accent);
+    }
+
+    .post-nav-label {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .post-nav-title {
+      font-family: var(--font-display);
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    @media (max-width: 960px) {
+      .article-layout {
+        grid-template-columns: 1fr;
+      }
+      .toc-sidebar {
+        display: none;
+      }
+      .article-sheet {
+        padding: 28px 22px;
+      }
+      .post-nav-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <div class="reading-progress-bar" id="reading-progress"></div>
+
+  <div class="container">
+    <div class="reader-top-bar">
+      <a href="/" class="nav-btn">← 返回专栏首页</a>
+      <div style="display:flex;gap:8px;">
+        <a href="/archive/" class="nav-btn">🗂️ 文章归档</a>
+        <a href="/admin/" id="edit-this-post-btn" class="nav-btn">✍️ 在工作台中编辑</a>
+      </div>
+    </div>
+
+    <div class="article-layout">
+      <div>
+        <article class="article-sheet" id="article-box">
+          <div style="padding:48px 0;text-align:center;color:var(--text-muted);">
+            正在展开文章卷轴...
+          </div>
+        </article>
+
+        <nav class="post-nav-grid" id="post-prev-next"></nav>
+      </div>
+
+      <aside class="toc-sidebar" id="toc-box" style="display:none;">
+        <h4 class="toc-heading">文章目录 · CONTENTS</h4>
+        <ul class="toc-list" id="toc-list"></ul>
+      </aside>
+    </div>
+  </div>
+
+  <script is:inline>
+    const CATEGORY_LABELS = {
+      essay: '随笔思考',
+      design: '器物与排版',
+      craft: '构建手记',
+      notes: '日常札记',
+      architecture: '构建手记',
+      engineering: '工程实践',
+      release: '版本手记',
+    };
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return iso.slice(0, 10);
+      return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`;
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // 阅读进度条更新
+    window.addEventListener('scroll', () => {
+      const docEl = document.documentElement;
+      const scrolled = docEl.scrollTop || document.body.scrollTop;
+      const height = docEl.scrollHeight - docEl.clientHeight;
+      const pct = height > 0 ? Math.min(100, Math.max(0, (scrolled / height) * 100)) : 0;
+      const bar = document.getElementById('reading-progress');
+      if (bar) bar.style.width = `${pct}%`;
+    });
+
+    function buildTableOfContents() {
+      const headings = Array.from(
+        document.querySelectorAll('#article-prose-body h2, #article-prose-body h3')
+      );
+      const tocBox = document.getElementById('toc-box');
+      const tocList = document.getElementById('toc-list');
+      if (!headings.length) {
+        tocBox.style.display = 'none';
+        return;
+      }
+      tocBox.style.display = 'block';
+      tocList.innerHTML = headings
+        .map((h) => {
+          const level = h.getAttribute('data-toc-level') || '2';
+          return `<li><a href="#${h.id}" class="toc-link level-${level}" data-target="${h.id}">${escapeHtml(h.textContent)}</a></li>`;
+        })
+        .join('');
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              const id = entry.target.id;
+              document.querySelectorAll('#toc-list .toc-link').forEach((a) => {
+                a.classList.toggle('active', a.getAttribute('data-target') === id);
+              });
+            }
+          }
+        },
+        { rootMargin: '-80px 0px -70% 0px' }
+      );
+      headings.forEach((h) => observer.observe(h));
+    }
+
+    async function loadArticle() {
+      // 同步站点品牌
+      fetch('/api/cms/overview')
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.ok) window.syncGlobalSiteBranding(d.settings);
+        })
+        .catch(() => {});
+
+      const sp = new URLSearchParams(window.location.search);
+      const slug = sp.get('slug') || '';
+      const id = sp.get('id') || '';
+      const box = document.getElementById('article-box');
+      if (!slug && !id) {
+        box.innerHTML = `<div style="padding:36px 0;text-align:center;color:var(--text-muted);">未指定文章地址，<a href="/" style="color:var(--accent);">返回专栏首页</a></div>`;
+        return;
+      }
+
+      const qs = slug ? `slug=${encodeURIComponent(slug)}` : `id=${encodeURIComponent(id)}`;
+      const res = await fetch(`/api/cms/post?${qs}&incView=1`);
+      const data = await res.json();
+      if (!data.ok || !data.post) {
+        box.innerHTML = `<div style="padding:36px 0;text-align:center;color:var(--text-muted);">${escapeHtml(data.error || '未找到该文章')}</div>`;
+        return;
+      }
+
+      const p = data.post;
+      window.__currentLoadedPostContent = p.content;
+      document.title = `${p.title} · 栖迟手札`;
+      document.getElementById('edit-this-post-btn').href = `/admin/?edit=${p.id}`;
+
+      const catLabel = CATEGORY_LABELS[p.category] || p.category;
+      const coverHtml = p.coverUrl
+        ? `<img class="article-cover" src="${escapeHtml(p.coverUrl)}" alt="${escapeHtml(p.title)}" onclick="window.openCmsLightbox(this.src)" />`
+        : '';
+      const summaryHtml = p.summary
+        ? `<div class="article-summary-lead">${escapeHtml(p.summary)}</div>`
+        : '';
+
+      box.innerHTML = `
+        <div class="article-meta">
+          <span class="article-cat">${escapeHtml(catLabel)}</span>
+          <span>·</span>
+          <span>${formatDate(p.published_at || p.created_at)}</span>
+          <span>·</span>
+          <span>约 ${p.readingMinutes || 1} 分钟阅读 (${p.wordCount || 300} 字)</span>
+          <span>·</span>
+          <span>${p.views} 次阅读</span>
+        </div>
+        <h1 class="article-title">${escapeHtml(p.title)}</h1>
+        ${summaryHtml}
+        ${coverHtml}
+        <div class="prose" id="article-prose-body">${window.renderSimpleMarkdown(p.content)}</div>
+        <div class="article-tags-row">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${(p.tags || []).map((t) => `<a href="/archive/?tag=${encodeURIComponent(t)}" class="tag-pill">#${escapeHtml(t)}</a>`).join('')}
+          </div>
+          <span style="font-size:12.5px;color:var(--text-muted);">最后修订于 ${formatDate(p.updated_at)}</span>
+        </div>
+      `;
+
+      buildTableOfContents();
+
+      window.addEventListener('cms-markdown-ready', () => {
+        const bodyEl = document.getElementById('article-prose-body');
+        if (bodyEl && window.__currentLoadedPostContent) {
+          bodyEl.innerHTML = window.renderSimpleMarkdown(window.__currentLoadedPostContent);
+          buildTableOfContents();
+        }
+      });
+
+      // 渲染上一篇 / 下一篇导航
+      const navBox = document.getElementById('post-prev-next');
+      const prevHtml = data.prevPost
+        ? `<a href="/post/?slug=${encodeURIComponent(data.prevPost.slug)}" class="post-nav-card">
+             <div class="post-nav-label">← 较新一篇</div>
+             <div class="post-nav-title">${escapeHtml(data.prevPost.title)}</div>
+           </a>`
+        : `<div></div>`;
+      const nextHtml = data.nextPost
+        ? `<a href="/post/?slug=${encodeURIComponent(data.nextPost.slug)}" class="post-nav-card" style="text-align:right;">
+             <div class="post-nav-label">较早一篇 →</div>
+             <div class="post-nav-title">${escapeHtml(data.nextPost.title)}</div>
+           </a>`
+        : `<div></div>`;
+      navBox.innerHTML = prevHtml + nextHtml;
+    }
+
+    loadArticle();
+  </script>
+  <script src="../scripts/markdown.js"></script>
+</BaseLayout>
