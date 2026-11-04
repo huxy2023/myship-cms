@@ -9,7 +9,6 @@
     "entry": "server/index.mjs",
     "prefix": "/api",
     "functionName": "myship-myship-cms",
-    "gatewayToken": null,
     "role": "SCF_ExecuteRole"
   },
   "resources": {
